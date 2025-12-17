@@ -8,9 +8,13 @@ def conta_ocorrencias(palavra_escolhida: str, sentenca: str) -> int:
 
     return contador
 
+
+def normaliza_sentenca(sentenca: str) -> str:
+    return sentenca.translate(str.maketrans('', '', string.punctuation)).lower()
+
+
 def constroi_bow(sentenca: str) -> dict[str, int]:
-    sentenca = sentenca.translate(str.maketrans('', '', string.punctuation))
-    sentenca = sentenca.lower()
+    sentenca = normaliza_sentenca(sentenca)
     palavras = sentenca.split()
     bow: dict[str, int] = {}
     for palavra in palavras:
