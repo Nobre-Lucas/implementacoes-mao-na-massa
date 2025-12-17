@@ -8,14 +8,17 @@ def conta_ocorrencias(palavra_escolhida: str, sentenca: str) -> int:
 
     return contador
 
-if __name__ == "__main__":
-    sentenca = input('Digite uma frase: ')
+def constroi_bow(sentenca: str) -> dict[str, int]:
     sentenca = sentenca.translate(str.maketrans('', '', string.punctuation))
     sentenca = sentenca.lower()
     palavras = sentenca.split()
     bow: dict[str, int] = {}
     for palavra in palavras:
         bow[palavra] = conta_ocorrencias(palavra, sentenca)
+    
+    return bow
 
-    print(bow)
+if __name__ == "__main__":
+    sentenca = input('Digite uma frase: ')
+    print(constroi_bow(sentenca))
         
