@@ -13,7 +13,7 @@ if __name__ == "__main__":
     sentenca = sentenca.translate(str.maketrans('', '', string.punctuation))
     sentenca = sentenca.lower()
     palavras = sentenca.split()
-    bow = {}
+    bow: dict[str, int] = {}
     for palavra in palavras:
         bow[palavra] = conta_ocorrencias(palavra, sentenca)
 
