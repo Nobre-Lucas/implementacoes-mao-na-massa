@@ -1,6 +1,7 @@
 import re
 
 import pandas as pd
+import numpy as np
 
 import nltk
 from nltk.corpus import stopwords
@@ -11,6 +12,7 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 
+import gensim.downloader as api
 from gensim.models import Word2Vec
 
 def preprocess_text(text):
@@ -58,6 +60,59 @@ def train_svm_with_representations(train_data, test_data, representation):
     return y_pred
 
 
+def get_word2vec_embeddings(data):
+    tokenized_sentences = [sentence.split() for sentence in data]
+    model = Word2Vec(tokenized_sentences, vector_size=100, window=5, min_count=1, workers=4)
+    embeddings = np.array([np.mean([model.wv[word] for word in sentence], axis=0) for sentence in tokenized_sentences])
+
+    return embeddings
+
+
+def train_svm_with_word2vec(train_data, test_data):
+    X_train = get_word2vec_embeddings(train_data[0])
+    y_train = train_data[1]
+    X_test = get_word2vec_embeddings(test_data)
+
+    clf = SVC()
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+
+    return y_pred
+
+
+def get_google_word2vec_embeddings(data):
+    model = api.load('word2vec-google-news-300')
+
+    tokenized_sentences = [sentence.split() for sentence in data]
+    embeddings = []
+
+    for sentence in tokenized_sentences:
+        sentence_embeddings = []
+        for word in sentence:
+            if word in model:
+                sentence_embeddings.append(model[word])
+            
+        if sentence_embeddings:
+            embeddings.append(np.mean(sentence_embeddings, axis=0))
+
+        else:
+            sentence_embeddings.append(np.zeros(300))
+
+    return np.array(embeddings)
+
+
+def train_svm_with_google_word2vec(train_data, test_data):
+    X_train = get_google_word2vec_embeddings(train_data[0])
+    y_train = train_data[1]
+    X_test = get_google_word2vec_embeddings(test_data)
+
+    clf = SVC()
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+
+    return y_pred
+
+
 def main():
 
     nltk.download('punkt')
@@ -96,6 +151,14 @@ def main():
     y_pred_tfidf = train_svm_with_representations([X_train, y_train], X_test, 'tfidf')
     accuracy_tfidf = accuracy_score(y_test, y_pred_tfidf)
     print(accuracy_tfidf)
+
+    y_pred_word2vec = train_svm_with_word2vec([X_train, y_train], X_test)
+    accuracy_word2vec = accuracy_score(y_test, y_pred_word2vec)
+    print(accuracy_word2vec)
+
+    y_pred_google_word2vec = train_svm_with_google_word2vec([X_train, y_train], X_test)
+    accuracy_google_word2vec = accuracy_score(y_test, y_pred_google_word2vec)
+    print(accuracy_google_word2vec)
 
 
 if __name__ == '__main__':
